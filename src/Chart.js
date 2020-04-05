@@ -1,51 +1,30 @@
 import React, { useState, useEffect }  from 'react';
-import { VictoryBar, VictoryChart, VictoryAxis, VictoryTheme } from 'victory';
-
-// const data = [
-//   {quarter: 1, earnings: 10000},
-//   {quarter: 2, earnings: 16500},
-//   {quarter: 3, earnings: 14250},
-//   {quarter: 4, earnings: 19000}
-// ];
-const BUCKET_URL = "https://odm-linecount.s3.amazonaws.com/store.json"
+import { LineChart, Line, CartesianGrid, XAxis, YAxis, Label } from 'recharts';
+import useWindowDimensions from './useWindowDimensions';
 
 function Chart() {
+  const BUCKET_URL = "https://odm-linecount.s3.amazonaws.com/store.json"
 
   const [data, setData] = useState([]);
+  const { width, height } = useWindowDimensions();
 
   useEffect(() => {
-    const mapper = array => Object.entries(array).map(e => ({"quarter": e[0], "earnings": e[1]}) )
+    const mapper = array => Object.entries(array).map(e => ({"locDate": e[0], "locCount": e[1]}) )
     fetch(BUCKET_URL)
       .then(res => res.json())
       .then(res => setData(mapper(res)))
   })
 
   return (
-    <VictoryChart
-      domainPadding={20}
-      theme={VictoryTheme.material}
-    >
-      <VictoryAxis
-        // tickValues specifies both the number of ticks and where
-        // they are placed on the axis
-        tickValues={["2020-03-04", "2020-03-05", "2020-03-09", "2020-03-10"]}
-        tickFormat={["2020-03-04", "2020-03-05", "2020-03-09", "2020-03-10"]}
-      />
-      <VictoryAxis
-        dependentAxis
-        // tickFormat specifies how ticks should be displayed
-        tickFormat={(x) => (`${x / 1000}k`)}
-      />
-
-      <VictoryBar
-        data={data}
-        // data accessor for x values
-        x="quarter"
-        // data accessor for y values
-        y="earnings"
-      ></VictoryBar>
-    </VictoryChart>
-  );
+    <LineChart width={width*.9} height={height*.8} data={data}>
+      <Line type="monotone" dataKey="locCount" stroke="#8884d8" />
+      <CartesianGrid stroke="#ccc"/>
+      <XAxis dataKey="locDate">
+        <Label value="date" position="insideBottom" offSet="{0}" />
+      </XAxis>
+      <YAxis />
+    </LineChart>
+  )
 }
 
-export default Chart;
+export default Chart
